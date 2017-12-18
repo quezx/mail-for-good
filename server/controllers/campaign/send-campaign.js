@@ -2,8 +2,28 @@ const db = require('../../models');
 const email = require('./email');
 const AWS = require('aws-sdk');
 const moment = require('moment');
+const fs = require('fs');
+const csv = require('csvtojson');
 
-module.exports = (req, res, io, redis) => {
+function *processCsv(file) {
+  const i = {};
+  if(!fs.existsSync(file)) {
+    throw  new Error(`Job File not found in location: ${file}`);
+  }
+  return new Promise(function (resolve, reject) {
+    csv()
+        .fromFile(file)
+        .on('json', (jsonObj)=> {
+          i[jsonObj.JobId] = jsonObj;
+        })
+        .on('done', (error)=> {
+          console.log("CSV Reading done.", error);
+          return resolve(i);
+        });
+  })
+}
+
+module.exports = async (req, res, io, redis) => {
 
   const userId = req.user.id;
 
@@ -12,6 +32,7 @@ module.exports = (req, res, io, redis) => {
     res.status(400).send();
     return;
   }
+
 
   function *sendCampaign() {
     const campaignId = req.body.id;
@@ -23,6 +44,11 @@ module.exports = (req, res, io, redis) => {
 
     // 2. Confirm the campaign id belongs to the user and retrieve the associated listId
     const campaignInfo = yield campaignBelongsToUser(userId, campaignId);
+
+    // 2.1 Get Jobs Ap
+    const jobFile = `${campaignInfo.name.split('/').pop()}.csv`;
+    const jobsMap = yield processCsv(jobFile);
+    console.log('Jobs Loaded')
 
     // 3. Get the user's Max24HourSend - SentLast24Hours to determine available email quota, then get MaxSendRate
     const quotas = yield getEmailQuotas(accessKey, secretKey, region);
@@ -40,7 +66,9 @@ module.exports = (req, res, io, redis) => {
     // 7. Send the campaign. TODO: Clean up & condense these arguments
     const campaignAndListInfo = {
       campaignInfo,
-      totalListSubscribers
+      totalListSubscribers,
+      jobsMap,
+      date: moment().format("DD MMM YYYY")
     };
 
     const amazonAccountInfo = {

@@ -6,13 +6,29 @@
  */
 
 const Handlebars = require('handlebars');
+const fs = require('fs');
+const bodyTemplate = Handlebars.compile(fs.readFileSync('JR.hbs').toString());
 
-module.exports = (task, campaignInfo) => {
-  // can pre-compile this to save time
-  const bodyTemplate = Handlebars.compile(campaignInfo.emailBody);
+module.exports = (task, campaignInfo, jobsMap, date) => {
+  const applicant = task.additionalData;
 
-  let data = task.additionalData;
+  let data = {
+    date,
+    applicant,
+  };
+
   data.email = task.email;
 
-  return bodyTemplate(data);
+  data["Jr_Job_Id1"] = jobsMap[applicant.Jr_Job_Id1];
+  data["Jr_Job_Id2"] = jobsMap[applicant.Jr_Job_Id2];
+  data["Jr_Job_Id3"] = jobsMap[applicant.Jr_Job_Id3];
+  data["Jr_Job_Id4"] = jobsMap[applicant.Jr_Job_Id4];
+  data["Jr_Job_Id5"] = jobsMap[applicant.Jr_Job_Id5];
+  data["Jr_Job_Id6"] = jobsMap[applicant.Jr_Job_Id6];
+  data["Jr_Job_Id7"] = jobsMap[applicant.Jr_Job_Id7];
+  data["Jr_Job_Id8"] = jobsMap[applicant.Jr_Job_Id8];
+  data["Jr_Job_Id9"] = jobsMap[applicant.Jr_Job_Id9];
+  data["Jr_Job_Id10"] = jobsMap[applicant.Jr_Job_Id10];
+
+  return bodyTemplate(data)
 };

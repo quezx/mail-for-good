@@ -18,8 +18,11 @@ const CreateQueue = require('./queue');
  */
 
 module.exports = async function (generator, redis, campaignAndListInfo, amazonAccountInfo, io, req) {
+  console.log('Amazon Controller', JSON.stringify(campaignAndListInfo));
   const {
     campaignInfo, // See object passed by send-campaign.js, contains info about the campaigns table
+    jobsMap,
+    date
   } = campaignAndListInfo;
 
   const {
@@ -67,7 +70,7 @@ module.exports = async function (generator, redis, campaignAndListInfo, amazonAc
     }
     // 1. Get the getAmazonEmailArray
     let currentBlockOfEmails = arrayOfIds[i];
-    let amazonEmailArray = await getAmazonEmailArray(currentBlockOfEmails, campaignInfo, whiteLabelUrl);
+    let amazonEmailArray = await getAmazonEmailArray(currentBlockOfEmails, campaignInfo, whiteLabelUrl, jobsMap, date);
     let LENGTH_OF_AMAZON_EMAIL_ARRAY = amazonEmailArray.length;
     for (let x = 0; x < LENGTH_OF_AMAZON_EMAIL_ARRAY; x++) {
       // 2. Add the email to the send queue. Continue when the queue tells us that it has space for our next email.

@@ -35,7 +35,8 @@ const AmazonEmail = require('../lib/amazon');
  *        [Object] ] } }
  */
 
-module.exports = async function (arrayOfIds, campaignInfo, whiteLabelUrl) {
+module.exports = async function (arrayOfIds, campaignInfo, whiteLabelUrl, jobsMap, date) {
+  console.log('GetAmazonEmailArray')
   const arrayCampaignInfo = arrayOfIds.map(() => Object.assign({}, campaignInfo));
   /**
    * @description Get the list subscriber and join their campaign subscriber information.
@@ -92,12 +93,16 @@ module.exports = async function (arrayOfIds, campaignInfo, whiteLabelUrl) {
   // Iterate through both links and opens - adding things where necessary
   const arrayAmazonEmails = [];
   for (let i = 0; i < arrayOfIds.length; i++) {
+
+    const firstJob = jobsMap[arrayCampaignInfo[i].additionalData.Jr_Job_Id1];
+    arrayCampaignInfo[i].emailSubject = firstJob.JobTitle + ' - ' + firstJob.CompanyName + ' - ' + firstJob.City;
+
     // If this campaign has enabled the unsubscribe link, inject it into configuredCampaignInfo
     if (arrayCampaignInfo[i].unsubscribeLinkEnabled) {
       arrayCampaignInfo[i].emailBody = insertUnsubscribeLink(arrayCampaignInfo[i].emailBody, subscribers[i].unsubscribeKey, arrayCampaignInfo[i].type, whiteLabelUrl);
     }
     // Replace any {{variables}} with data from campaignInfo
-    arrayCampaignInfo[i].emailBody = mailMerge(subscribers[i], arrayCampaignInfo[i]);
+    arrayCampaignInfo[i].emailBody = mailMerge(subscribers[i], arrayCampaignInfo[i], jobsMap, date);
     // If this campaign has enabled tracking links, wrap the links
     if (arrayCampaignInfo[i].trackLinksEnabled) {
       arrayCampaignInfo[i].emailBody = wrapLink(arrayCampaignInfo[i].emailBody, links[i].trackingId, arrayCampaignInfo[i].type, whiteLabelUrl);
