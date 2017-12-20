@@ -94,6 +94,7 @@ module.exports = async function (arrayOfIds, campaignInfo, whiteLabelUrl, jobsMa
   const arrayAmazonEmails = [];
   for (let i = 0; i < arrayOfIds.length; i++) {
     const firstJob = jobsMap[subscribers[i].additionalData.Jr_Job_Id1];
+    console.log('firstJob', firstJob, jobsMap, subscribers[i])
     arrayCampaignInfo[i].emailSubject = firstJob.JobTitle + ' - ' + firstJob.CompanyName + ' - ' + firstJob.City;
 
     // If this campaign has enabled the unsubscribe link, inject it into configuredCampaignInfo
