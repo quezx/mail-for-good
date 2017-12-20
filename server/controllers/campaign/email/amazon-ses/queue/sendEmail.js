@@ -53,7 +53,8 @@ module.exports = function(amazonEmail, campaignInfo, ses) {
    * @param {object} email - configured amazon email to send
    * @return {Promise} a promise that resolves when the tracking info has been saved
    */
-
+  const x =JSON.stringify(email)
+console.log('email\n', x.length , '\n');
   return promisifiedSes(email)
     .then(data => {
       return _updateAnalytics(data, task, campaignInfo);

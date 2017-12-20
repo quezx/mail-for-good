@@ -29,8 +29,9 @@ module.exports = (req, res, io) => {
     2. Iterate through the CSV file based on the concurrency set in const concurrency.
     3. Using the instance of the list table upsert rows to the listsubscriber(s) table, providing a foreign key from the list instance.
   */
-
+  console.log('req.query', req.body, req.file)
   const listName = req.body.list; // Name of the list from the user
+  req.body.headers = req.body.headers ||   '["email","FirstName","LastName","Experience","Function","Salary","Jr_Role","JR_Mobileno","JR_Companyname","JR_autologin_key","Jr_Job_Id1","Jr_Job_Id2","Jr_Job_Id3","Jr_Job_Id4","Jr_Job_Id5","Jr_Job_Id6","Jr_Job_Id7","Jr_Job_Id8","Jr_Job_Id9","Jr_Job_Id10","Jr_Job_Count","Jr_group_function","DB_Jobrec"]';
   const additionalFields = _.without(JSON.parse(req.body.headers), 'email'); // e.g. name, location, sex, (excluding email header)
   const userId = req.user.id;
 
@@ -63,6 +64,8 @@ module.exports = (req, res, io) => {
     return err;
   });
 
+  console.log('validateListBelongsToUser', validateListBelongsToUser)
+
   const validateCsvDoesNotContainErrors = new Promise((resolve, reject) => {
     const notification = {
       message: 'Validating CSV ...',
@@ -88,7 +91,7 @@ module.exports = (req, res, io) => {
 
           sendUpdateNotification(io, req, notification);
         }
-
+        console.log('currentLine', currentLine)
         currentLine++;
       })
       .on('error', err => {
@@ -97,7 +100,7 @@ module.exports = (req, res, io) => {
           icon: 'fa-list-alt',
           iconColour: 'text-red',
         };
-
+        console.log('currentLine', err)
         sendSingleNotification(io, req, notification);
         console.log(err);
         res.status(400).send({ message: err.message });
@@ -118,11 +121,18 @@ module.exports = (req, res, io) => {
   Promise.all([validateListBelongsToUser, validateCsvDoesNotContainErrors])
   .then(values => {
     let [listInstance] = values; // Get variables from the values array
+
     const randomId = shortid.generate();
 
     listInstance = listInstance[0];
     const listIsNew = listInstance.$options.isNewRecord;
     const listId = listInstance.dataValues.id;
+
+    const message = listIsNew
+        ? `List: ${listName} - Successfully created`
+        : `List: ${listName} - Successfully updated`;
+    res.status(202).send({ id: listInstance.id, message: message});
+
 
     const filename = req.file.originalname;
     let bufferArray = [];
@@ -304,10 +314,6 @@ module.exports = (req, res, io) => {
       });
     });
 
-    const message = listIsNew
-      ? `List: ${listName} - Successfully created`
-      : `List: ${listName} - Successfully updated`;
-    res.status(202).send({message: message});
 
     return null;
   })

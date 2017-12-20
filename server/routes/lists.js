@@ -49,6 +49,7 @@ module.exports = function(app, io) {
   });
   // Post new list via csv import
   app.post('/api/list/add/csv', apiIsAuth, multer.single('csv'), cookieParser, writeListAccess, (req, res) => {
+    console.log('6', req.body, req.file)
     importCSV(req, res, io);
   });
 

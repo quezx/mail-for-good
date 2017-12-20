@@ -5,25 +5,7 @@ const moment = require('moment');
 const fs = require('fs');
 const csv = require('csvtojson');
 
-function *processCsv(file) {
-  const i = {};
-  if(!fs.existsSync(file)) {
-    throw  new Error(`Job File not found in location: ${file}`);
-  }
-  return new Promise(function (resolve, reject) {
-    csv()
-        .fromFile(file)
-        .on('json', (jsonObj)=> {
-          i[jsonObj.JobId] = jsonObj;
-        })
-        .on('done', (error)=> {
-          console.log("CSV Reading done.", error);
-          return resolve(i);
-        });
-  })
-}
-
-module.exports = async (req, res, io, redis) => {
+module.exports = (req, res, io, redis) => {
 
   const userId = req.user.id;
 
@@ -46,7 +28,8 @@ module.exports = async (req, res, io, redis) => {
     const campaignInfo = yield campaignBelongsToUser(userId, campaignId);
 
     // 2.1 Get Jobs Ap
-    const jobFile = `${campaignInfo.name.split('/').pop()}.csv`;
+    const jobFile = `data/${campaignInfo.name.split('/').pop()}.csv`;
+
     const jobsMap = yield processCsv(jobFile);
     console.log('Jobs Loaded')
 
@@ -87,6 +70,25 @@ module.exports = async (req, res, io, redis) => {
 
   const generator = sendCampaign();
   generator.next();
+
+
+  function processCsv(file) {
+    const i = {};
+    if(!fs.existsSync(file)) {
+      throw  new Error(`Job File not found in location: ${file}`);
+    }
+
+    csv()
+        .fromFile(file)
+        .on('json', (jsonObj)=> {
+          i[jsonObj.JobId] = jsonObj;
+        })
+        .on('done', (error)=> {
+          console.log("CSV Reading done.", error);
+          return generator.next(i);
+        });
+
+  }
 
   // Validate the campaign belongs to the user
   function campaignBelongsToUser(userId, campaignId) {

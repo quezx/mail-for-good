@@ -35,9 +35,10 @@ module.exports = (req, res, io) => {
 
   Promise.all([validateListBelongsToUser]).then(values => {
     if (values.some(x => x === false)) {
+      console.log('if')
       res.status(400).send(); // If any validation promise resolves to false, fail silently. No need to respond as validation is handled client side & this is a security measure.
     } else {
-
+console.log('else')
       const emailBodyType = req.body.emailBody;
 
       // Find or create the campaign
@@ -69,7 +70,7 @@ module.exports = (req, res, io) => {
             // Each time we write (bulk insert) 10k ListSubscribers, fetch the next 10k by recursively calling
             // createCampaignSubscribers - ensures that we don't run out of ram by loading too many ListSubscribers
             // at once.
-            res.send({message: 'Campaign is being created - it will be ready to send soon.'}); // Should use notification/status rather than simple response
+            res.send({id: campaignId, message: 'Campaign is being created - it will be ready to send soon.'}); // Should use notification/status rather than simple response
             function createCampaignSubscribers(offset = 0, limit = 10000) {
               db.listsubscriber.findAll({
                 where: {
