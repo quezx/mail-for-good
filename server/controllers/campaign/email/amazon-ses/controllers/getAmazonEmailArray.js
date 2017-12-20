@@ -94,7 +94,7 @@ module.exports = async function (arrayOfIds, campaignInfo, whiteLabelUrl, jobsMa
   const arrayAmazonEmails = [];
   for (let i = 0; i < arrayOfIds.length; i++) {
     const firstJob = jobsMap[subscribers[i].additionalData.Jr_Job_Id1];
-    console.log('firstJob', firstJob, jobsMap, subscribers[i])
+    console.log('firstJob', subscribers[i])
     arrayCampaignInfo[i].emailSubject = firstJob.JobTitle + ' - ' + firstJob.CompanyName + ' - ' + firstJob.City;
 
     // If this campaign has enabled the unsubscribe link, inject it into configuredCampaignInfo
@@ -103,6 +103,7 @@ module.exports = async function (arrayOfIds, campaignInfo, whiteLabelUrl, jobsMa
     }
     // Replace any {{variables}} with data from campaignInfo
     arrayCampaignInfo[i].emailBody = mailMerge(subscribers[i], arrayCampaignInfo[i], jobsMap, date);
+
     // If this campaign has enabled tracking links, wrap the links
     if (arrayCampaignInfo[i].trackLinksEnabled) {
       arrayCampaignInfo[i].emailBody = wrapLink(arrayCampaignInfo[i].emailBody, links[i].trackingId, arrayCampaignInfo[i].type, whiteLabelUrl);

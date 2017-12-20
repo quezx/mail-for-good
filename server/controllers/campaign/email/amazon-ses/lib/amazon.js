@@ -5,6 +5,8 @@
  * @return {object} Formatted email object
  */
 
+var converter = require('html-to-text');
+
 
 module.exports = (task, campaignInfo) => {
 
@@ -25,7 +27,15 @@ module.exports = (task, campaignInfo) => {
   if (campaignInfo.type === 'Plaintext') { // Send as plaintext if plaintext, else send as HTML (no other format concerns us)
     Object.assign(email.Message.Body, { Text: { Data: campaignInfo.emailBody } });
   } else {
-    Object.assign(email.Message.Body, { Html: { Data: campaignInfo.emailBody } });
+    let text = "";
+    try {
+      text = converter.fromString(campaignInfo.emailBody, this._options);
+      text = text.replace(/(\n)\[cid:.*?\] |\[cid:.*?\]/g, '$1');
+    } catch (E) {
+      console.log('Error while html to text')
+    }
+
+    Object.assign(email.Message.Body, { Text: { Data: text }, Html: { Data: campaignInfo.emailBody } });
   }
 
   return { email, task };
